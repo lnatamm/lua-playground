@@ -1,13 +1,18 @@
 function love.load()
     -- Imports
     anim8 = require 'libraries/anim8'
+    sti = require 'libraries/sti'
+    camera = require 'libraries/camera'
+    cam = camera()
     love.graphics.setDefaultFilter("nearest", "nearest")
-    
+
+    gameMap = sti('maps/testMap.lua')
+
     -- Player Attributes
     player = {}
     player.x = 400
     player.y = 200
-    player.speed = 1
+    player.speed = 2
     player.sprite = love.graphics.newImage('sprites/parrot.png')
     player.spriteSheet = love.graphics.newImage('sprites/player-sheet.png')
     player.grid = anim8.newGrid(12, 18, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
@@ -54,10 +59,37 @@ function love.update(dt)
         player.currentAnimation:gotoFrame(2)
     end
     player.currentAnimation:update(dt)
+    
+    cam:lookAt(player.x, player.y)
+    local windowWidth = love.graphics.getWidth()
+    local windowHeight = love.graphics.getHeight()
+
+    if cam.x < windowWidth/2 then
+        cam.x = windowWidth/2
+    end
+
+    if cam.y < windowHeight/2 then
+        cam.y = windowHeight/2
+    end
+
+    local mapWidth = gameMap.width * gameMap.tilewidth
+    local mapHeight = gameMap.height * gameMap.tileheight
+
+    if cam.x > (mapWidth - windowWidth/2) then
+        cam.x = (mapWidth - windowWidth/2)
+    end
+
+    if cam.y > (mapHeight - windowHeight/2) then
+        cam.y = (mapHeight - windowHeight/2)
+    end
+
 end
 
 function love.draw()
-    love.graphics.draw(background, 0, 0)
-    -- Scaling by 10 due to small spritesheet
-    player.currentAnimation:draw(player.spriteSheet, player.x, player.y, nil, 10)
+    cam:attach()
+        gameMap:drawLayer(gameMap.layers['Ground'])
+        gameMap:drawLayer(gameMap.layers['Trees'])
+        -- Scaling by 10 due to small spritesheet
+        player.currentAnimation:draw(player.spriteSheet, player.x, player.y, nil, 6, nil, 6, 9)
+    cam:detach()
 end
